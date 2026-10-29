@@ -250,7 +250,7 @@ footer a{margin:0 .6rem}
    <label for="fe">E-mail</label><input id="fe" type="email" required autocomplete="email">
    <label for="fm">Mensagem</label><textarea id="fm" required></textarea>
    <button class="btn" type="submit">Enviar mensagem</button>
-   <p class="ok" id="ok" role="status">Mensagem recebida! Obrigada pelo carinho, respondo em breve.</p>
+   <p class="ok" id="ok" role="status">Abrimos o WhatsApp com a sua mensagem. É só tocar em enviar!</p>
   </form>
  </div>
 </section>
@@ -273,7 +273,7 @@ footer a{margin:0 .6rem}
    <label for="cn">Nome</label><input id="cn" required>
    <label for="ce">E-mail</label><input id="ce" type="email" required>
    <button class="btn" type="submit">Quero receber</button>
-   <p class="ok" id="cok" role="status">Pronto! Em breve o mídia kit chega no seu e-mail.</p>
+   <p class="ok" id="cok" role="status">Abrimos o WhatsApp com o seu pedido. É só tocar em enviar!</p>
   </form>
  </div>
 </div>
@@ -341,14 +341,19 @@ function esc(s){var d=document.createElement("div");d.textContent=s;return d.inn
 /* Para trocar um bloco de degradê por imagem real: preencha o campo "capa" ou "img" nos dados acima. */
 function ph(src,leg,alt){return src?'<img src="'+esc(src)+'" alt="'+esc(alt)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">':'<div class="ph" role="img" aria-label="'+esc(alt)+'">'+leg+'</div>'}
 
-$("stats").innerHTML=CAPA.map(function(c){return '<div><b data-to="'+c.to+'" data-pre="'+c.pre+'">'+c.pre+fmt(c.to)+'</b><span>'+c.l+'</span></div>'}).join("");
+/* números ainda em 0 ficam escondidos até você preencher */
+function comValor(m){return m.to>0}
+$("stats").innerHTML=CAPA.filter(comValor).map(function(c){return '<div><b data-to="'+c.to+'" data-pre="'+c.pre+'">'+c.pre+fmt(c.to)+'</b><span>'+c.l+'</span></div>'}).join("");
 var mq=MARCAS.map(function(m){return "<span>"+m+"</span>"}).join("");
 $("marcas").innerHTML=mq+mq;
 var bq=SERVICOS.map(function(s){return "<span>"+s.t+" &bull;</span>"}).join("");
 $("band").innerHTML=bq+bq+bq+bq;
 
 $("tres").innerHTML=DESTAQUES.map(function(d){
- return '<a class="card rv" href="'+esc(d.link)+'" target="_blank" rel="noopener" aria-label="Assistir: '+esc(d.t)+'"><div class="capa9">'+ph(d.capa,"capa do vídeo 9:16","Capa do vídeo "+d.t)+'<span class="play" aria-hidden="true"></span></div><div class="big">'+d.num+'</div><div class="rot">'+d.rot+'</div><h3>'+d.t+'</h3><p>'+d.c+'</p></a>'}).join("");
+ var corpo='<div class="capa9">'+ph(d.capa,"capa do vídeo 9:16","Capa do vídeo "+d.t)+'<span class="play" aria-hidden="true"></span></div><div class="big">'+d.num+'</div><div class="rot">'+d.rot+'</div><h3>'+d.t+'</h3><p>'+d.c+'</p>';
+ /* sem link ainda: mostra o card sem abrir uma aba vazia */
+ if(!d.link||d.link==="#")return '<div class="card rv">'+corpo+'</div>';
+ return '<a class="card rv" href="'+esc(d.link)+'" target="_blank" rel="noopener" aria-label="Assistir: '+esc(d.t)+'">'+corpo+'</a>'}).join("");
 
 var nichos=["Todos"];TRABALHOS.forEach(function(t){if(nichos.indexOf(t.n)<0)nichos.push(t.n)});
 $("filtros").innerHTML=nichos.map(function(n,i){return '<button type="button" aria-pressed="'+(i==0)+'" data-n="'+n+'">'+n+'</button>'}).join("");
@@ -360,7 +365,7 @@ $("filtros").addEventListener("click",function(e){
 });
 
 $("serv").innerHTML=SERVICOS.map(function(s,i){return '<article class="rv"><div class="n">'+fmt(i+1)+'</div><h3>'+s.t+'</h3><p>'+s.d+'</p></article>'}).join("");
-$("mets").innerHTML=METRICAS.map(function(m){return '<div class="rv"><b data-to="'+m.to+'" data-pre="'+m.pre+'">'+m.pre+fmt(m.to)+'</b>'+m.l+'</div>'}).join("");
+$("mets").innerHTML=METRICAS.filter(comValor).map(function(m){return '<div class="rv"><b data-to="'+m.to+'" data-pre="'+m.pre+'">'+m.pre+fmt(m.to)+'</b>'+m.l+'</div>'}).join("");
 $("res").innerHTML=RESULTADOS.map(function(r){return '<div class="rv"><h3>'+r.t+'</h3><p>'+r.d+'</p></div>'}).join("");
 $("deps").innerHTML=DEPOIMENTOS.map(function(d){return '<blockquote class="rv"><p>'+d.q+'</p><cite>'+d.n+', '+d.e+'</cite></blockquote>'}).join("");
 
@@ -384,8 +389,9 @@ function contar(el){
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");e.target.querySelectorAll("[data-to]").forEach(contar);if(e.target.dataset.to)contar(e.target);io.unobserve(e.target)}})},{threshold:.15});
 document.querySelectorAll(".rv,.stats,[data-to]").forEach(function(el){io.observe(el)});
 
-/* formulário */
-$("form").onsubmit=function(e){e.preventDefault();$("ok").classList.add("on");this.reset()};
+/* formulários: enviam a mensagem pelo WhatsApp */
+function whats(txt){window.open("https://wa.me/"+PERFIL.whats+"?text="+encodeURIComponent(txt),"_blank","noopener")}
+$("form").onsubmit=function(e){e.preventDefault();whats("Oi Luana! Vi seu portfólio.\nNome: "+$("fn").value+"\nE-mail: "+$("fe").value+"\n\n"+$("fm").value);$("ok").classList.add("on");this.reset()};
 
 /* card de captura: uma vez por visita */
 var cap=$("cap"),antes=null;
@@ -396,7 +402,7 @@ if(!visto)setTimeout(abrir,7000);
 $("capx").onclick=fechar;
 cap.addEventListener("click",function(e){if(e.target===cap)fechar()});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&cap.classList.contains("on"))fechar()});
-$("capf").onsubmit=function(e){e.preventDefault();$("cok").classList.add("on");setTimeout(fechar,2500)};
+$("capf").onsubmit=function(e){e.preventDefault();whats("Oi Luana! Quero receber seu mídia kit.\nNome: "+$("cn").value+"\nE-mail: "+$("ce").value);$("cok").classList.add("on");setTimeout(fechar,2500)};
 </script>
 </body>
 </html>
